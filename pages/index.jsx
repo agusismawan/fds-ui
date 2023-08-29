@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Head from "next/head";
 
-const BASE_URL = "https://fdsapiakrobat.xyz/v1.0";
-
 function initDiagram() {
   const $ = go.GraphObject.make; // for conciseness in defining templates
 
@@ -240,7 +238,7 @@ export default function Home({ fraudsData }) {
   let config = {
     method: "get",
     maxBodyLength: Infinity,
-    url: `${BASE_URL}/fraudds/?accountNumber=050601019213501&transactionDate=2023-06-13`,
+    url: `${process.env.NEXT_PUBLIC_API_URL}/v1.0/fraudds/?accountNumber=050601019213501&transactionDate=2023-06-13`,
     headers: {},
   };
 
@@ -304,7 +302,7 @@ export default function Home({ fraudsData }) {
 }
 
 export const getServerSideProps = async ({ query }) => {
-  let url = new URL(`${BASE_URL}/fraudds`);
+  let url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/v1.0/fraudds`);
 
   const accountNumber = query.accountNumber;
   const transactionDate = query.transactionDate;
