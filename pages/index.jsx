@@ -112,7 +112,7 @@ function initDiagram() {
               stroke: "rgba(0, 0, 0, .87)",
               maxSize: new go.Size(160, NaN),
             },
-            new go.Binding("text", "key")
+            new go.Binding("text", "debetAccount")
           ),
           $(
             go.TextBlock,
@@ -152,16 +152,16 @@ function initDiagram() {
           margin: 8,
           defaultAlignment: go.Spot.Left, // thus no need to specify alignment on each element
         },
-        $(
-          go.TextBlock,
-          textStyle("inputDate"),
-          new go.Binding("text", "inputDate", (inputDate) => {
-            const date = new Date(inputDate);
-            return `Transaction Date : ${new Intl.DateTimeFormat(
-              "id-ID"
-            ).format(date)}`;
-          })
-        ),
+        // $(
+        //   go.TextBlock,
+        //   textStyle("inputDate"),
+        //   new go.Binding("text", "inputDate", (inputDate) => {
+        //     const date = new Date(inputDate);
+        //     return `Transaction Date : ${new Intl.DateTimeFormat(
+        //       "id-ID"
+        //     ).format(date)}`;
+        //   })
+        // ),
         $(
           go.TextBlock,
           textStyle("channelName"),
@@ -198,12 +198,12 @@ function initDiagram() {
         ),
         $(
           go.TextBlock,
-          textStyle("parent"),
+          textStyle("parentNumber"),
           new go.Binding("margin", "channelName", (channel) => mt8), // some space above if there is also a headOf value
-          new go.Binding("text", "parent", (parent) => {
-            var parent = myDiagram.model.findNodeDataForKey(parent);
+          new go.Binding("text", "parentNumber", (parentNumber) => {
+            var parent = myDiagram.model.findNodeDataForKey(parentNumber);
             if (parent !== null) {
-              return `Credit from: ${parent.key}`;
+              return `Credit from: ${parent.debetAccount}`;
             }
             return "";
           })
@@ -222,7 +222,7 @@ function initDiagram() {
 
   // create the Model with data for the tree, and assign to the Diagram
   myDiagram.model = new go.TreeModel({
-    nodeParentKeyProperty: "parent", // this property refers to the parent node data
+    nodeParentKeyProperty: "parentNumber", // this property refers to the parent node data
   });
 
   // Overview
@@ -242,24 +242,19 @@ export default function Home({ fraudsData }) {
     headers: {},
   };
 
-  const [nodeDataArray, setNodeDataArray] = useState(fraudsData || []);
+  const [nodeDataArray, setNodeDataArray] = useState([]);
   const [isLoading, setIsloading] = useState(false);
 
-  function reArrangeData(fraudsData) {
-    const data = fraudsData.data;
-    data.unshift({
-      key: fraudsData.inputAccNumber,
-      cardNumber: "Debit Account",
-      inputDate: fraudsData.inputTransactionDate,
+  function reArrange(arr) {
+    arr.map((d, idx) => {
+      if (idx === 0) {
+        delete d.parentNumber;
+      }
+
+      d.key = d.rowNumber;
+      delete d.rowNumber;
     });
-    setNodeDataArray(data);
   }
-
-  useEffect(() => {
-    reArrangeData(fraudsData);
-  }, [fraudsData]);
-
-  // console.log(nodeDataArray);
 
   // useEffect(() => {
   //   setIsloading(true);
@@ -280,9 +275,14 @@ export default function Home({ fraudsData }) {
   //     });
   // }, []);
 
+  useEffect(() => {
+    reArrange(fraudsData.data);
+  }, []);
+
   return (
     <div>
       <Head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <title>FDS UI - by Project Akrobat</title>
       </Head>
       {isLoading ? (
@@ -292,7 +292,7 @@ export default function Home({ fraudsData }) {
           <ReactDiagram
             initDiagram={initDiagram}
             divClassName="diagram-component"
-            nodeDataArray={nodeDataArray}
+            nodeDataArray={fraudsData.data}
           />
           <div id="myOverviewDiv" className="myOverviewDiv"></div>
         </>
