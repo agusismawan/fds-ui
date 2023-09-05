@@ -1,8 +1,9 @@
+import Head from "next/head";
+import { useEffect, useState } from "react";
 import * as go from "gojs";
 import { ReactDiagram } from "gojs-react";
-import { useEffect, useState } from "react";
 import axios from "axios";
-import Head from "next/head";
+import { useForm } from "react-hook-form";
 
 function initDiagram() {
   const $ = go.GraphObject.make; // for conciseness in defining templates
@@ -234,88 +235,102 @@ function initDiagram() {
   return myDiagram;
 }
 
-export default function Home({ fraudsData }) {
-  let config = {
-    method: "get",
-    maxBodyLength: Infinity,
-    url: `${process.env.NEXT_PUBLIC_API_URL}/v1.0/fraudds/?accountNumber=050601019213501&transactionDate=2023-06-13`,
-    headers: {},
-  };
-
+export default function Home() {
   const [nodeDataArray, setNodeDataArray] = useState([]);
   const [isLoading, setIsloading] = useState(false);
 
   function reArrange(arr) {
-    arr.map((d, idx) => {
-      if (idx === 0) {
-        delete d.parentNumber;
-      }
-
-      d.key = d.rowNumber;
-      delete d.rowNumber;
-    });
+    if (arr[0]) {
+      delete arr[0].parentNumber;
+      delete arr[0].channelName;
+      delete arr[0].transactionAmount;
+      delete arr[0].transactionTime;
+    }
   }
 
-  // useEffect(() => {
-  //   setIsloading(true);
-  //   axios
-  //     .request(config)
-  //     .then((response) => {
-  //       const data = response.data.data;
-  //       data.unshift({
-  //         key: response.data.inputAccNumber,
-  //         cardNumber: "Debit Account",
-  //         inputDate: response.data.inputTransactionDate,
-  //       });
-  //       setNodeDataArray(data);
-  //       setIsloading(false);
-  //     })
-  //     .catch((error) => {
-  //       console.log(error);
-  //     });
-  // }, []);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const onSubmit = (data) => {
+    setIsloading(true);
 
-  useEffect(() => {
-    reArrange(fraudsData.data);
-  }, []);
+    axios
+      .get(
+        `${process.env.NEXT_PUBLIC_API_URL}/v1.0/fraudds/?accountNumber=${data.accountNumber}&transactionDate=${data.transactionDate}`
+      )
+      .then((response) => {
+        // Success 🎉
+        let res = response.data.data;
+        reArrange(res);
+        setNodeDataArray(res);
+        setIsloading(false);
+      })
+      .catch((error) => {
+        // Error 😨
+        if (error.response) {
+          /*
+           * The request was made and the server responded with a
+           * status code that falls out of the range of 2xx
+           */
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+        } else if (error.request) {
+          /*
+           * The request was made but no response was received, `error.request`
+           * is an instance of XMLHttpRequest in the browser and an instance
+           * of http.ClientRequest in Node.js
+           */
+          console.log(error.request);
+        } else {
+          // Something happened in setting up the request and triggered an Error
+          console.log("Error", error.message);
+        }
+        console.log(error.config);
+      });
+  };
+  console.log(errors);
 
   return (
-    <div>
+    <>
       <Head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <title>FDS UI - by Project Akrobat</title>
       </Head>
+      <div style={{ marginBottom: "20px" }}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <input
+            type="text"
+            placeholder="accountNumber"
+            {...register("accountNumber", { required: true, maxLength: 15 })}
+          />
+          <input
+            type="date"
+            placeholder="transactionDate"
+            {...register("transactionDate", { required: true })}
+          />
+
+          <input type="submit" />
+        </form>
+      </div>
       {isLoading ? (
         "Loading..."
+      ) : nodeDataArray.length === 0 ? (
+        ""
+      ) : nodeDataArray.length === 1 ? (
+        "Data not found!"
       ) : (
-        <>
+        <div style={{ position: "relative" }}>
           <ReactDiagram
             initDiagram={initDiagram}
             divClassName="diagram-component"
-            nodeDataArray={fraudsData.data}
+            nodeDataArray={nodeDataArray}
           />
           <div id="myOverviewDiv" className="myOverviewDiv"></div>
-        </>
+        </div>
       )}
-    </div>
+    </>
   );
 }
-
-export const getServerSideProps = async ({ query }) => {
-  let url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/v1.0/fraudds`);
-
-  const accountNumber = query.accountNumber;
-  const transactionDate = query.transactionDate;
-
-  if (JSON.stringify(query) === "{}") {
-    url.searchParams.append("accountNumber", "050601019213501");
-    url.searchParams.append("transactionDate", "2023-06-13");
-  } else {
-    url.searchParams.append("accountNumber", accountNumber);
-    url.searchParams.append("transactionDate", transactionDate);
-  }
-
-  const res = await fetch(url.toString());
-  const fraudsData = await res.json();
-  return { props: { fraudsData } };
-};
