@@ -1,12 +1,9 @@
-"use client";
-
-import { Card, Title, Text, Button, Grid } from "@tremor/react";
 import Head from "next/head";
-import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import * as go from "gojs";
 import { ReactDiagram } from "gojs-react";
 import axios from "axios";
+import { useForm } from "react-hook-form";
 
 function initDiagram() {
   const $ = go.GraphObject.make; // for conciseness in defining templates
@@ -242,7 +239,7 @@ function initDiagram() {
   return myDiagram;
 }
 
-export default function Dashboard() {
+export default function Home() {
   const [nodeDataArray, setNodeDataArray] = useState([]);
   const [isLoading, setIsloading] = useState(false);
 
@@ -252,7 +249,6 @@ export default function Dashboard() {
       delete arr[0].channelName;
       delete arr[0].transactionAmount;
       delete arr[0].transactionTime;
-      arr[0].creditAccount = arr[0].debetAccount;
     }
   }
 
@@ -299,6 +295,7 @@ export default function Dashboard() {
         console.log(error.config);
       });
   };
+  console.log(errors);
 
   return (
     <>
@@ -306,53 +303,38 @@ export default function Dashboard() {
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <title>FDS UI - by Project Akrobat</title>
       </Head>
-      <main className="p-12">
-        <Title color="black">Fraud Detection System</Title>
-        <Text>Melayani dengan setulus hati, serta setia dan waspada.</Text>
+      <div style={{ marginBottom: "20px" }}>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Grid numItemsMd={2} numItemsLg={3} className="gap-6 mt-6">
-            <input
-              type="text"
-              placeholder="accountNumber"
-              {...register("accountNumber", { required: true, maxLength: 15 })}
-              name="accountNumber"
-              id="accountNumber"
-              className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-            />
-            <input
-              type="date"
-              placeholder="transactionDate"
-              {...register("transactionDate", { required: true })}
-              name="transactionDate"
-              id="transactionDate"
-              className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-            />
-            <Button size="sm" className="w-1/2">
-              Search
-            </Button>
-          </Grid>
+          <input
+            type="text"
+            placeholder="accountNumber"
+            {...register("accountNumber", { required: true, maxLength: 15 })}
+          />
+          <input
+            type="date"
+            placeholder="transactionDate"
+            {...register("transactionDate", { required: true })}
+          />
+
+          <input type="submit" />
         </form>
-        <div className="mt-6">
-          <Card>
-            {isLoading ? (
-              "Loading..."
-            ) : nodeDataArray.length === 0 ? (
-              ""
-            ) : nodeDataArray.length === 1 ? (
-              "Data not found!"
-            ) : (
-              <div style={{ position: "relative" }}>
-                <ReactDiagram
-                  initDiagram={initDiagram}
-                  divClassName="diagram-component"
-                  nodeDataArray={nodeDataArray}
-                />
-                <div id="myOverviewDiv" className="myOverviewDiv"></div>
-              </div>
-            )}
-          </Card>
+      </div>
+      {isLoading ? (
+        "Loading..."
+      ) : nodeDataArray.length === 0 ? (
+        ""
+      ) : nodeDataArray.length === 1 ? (
+        "Data not found!"
+      ) : (
+        <div style={{ position: "relative" }}>
+          <ReactDiagram
+            initDiagram={initDiagram}
+            divClassName="diagram-component"
+            nodeDataArray={nodeDataArray}
+          />
+          <div id="myOverviewDiv" className="myOverviewDiv"></div>
         </div>
-      </main>
+      )}
     </>
   );
 }

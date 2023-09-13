@@ -6,6 +6,7 @@
       "lint": "next lint"
    },
    "dependencies": {
+      "@tremor/react": "^3.7.3",
       "axios": "1.5.0",
       "gojs": "2.3.10",
       "gojs-react": "1.1.2",
@@ -13,5 +14,10 @@
       "react": "17.0.2",
       "react-dom": "17.0.2",
       "react-hook-form": "^7.46.1"
+   },
+   "devDependencies": {
+      "autoprefixer": "^10.4.15",
+      "postcss": "^8.4.29",
+      "tailwindcss": "^3.3.3"
    }
 }
